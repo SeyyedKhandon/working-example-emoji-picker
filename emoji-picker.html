@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      #emojis span {
+        cursor: pointer;
+      }
+      #chatbox {
+        border: 1px solid;
+      }
+    </style>
+  </head>
+  <body>
+    <button
+      type="button"
+      onclick="document.getElementById('chatbox').focus(); pasteHtmlAtCaret('<b>INSERTED</b>'); "
+    >
+      Paste HTML
+    </button>
+    <div id="emojis"></div>
+    <div id="chatbox" contenteditable></div>
+    <script>
+      function pasteHtmlAtCaret(html) {
+        let sel, range;
+        if (window.getSelection) {
+          // IE9 and non-IE
+          sel = window.getSelection();
+          if (sel.getRangeAt && sel.rangeCount) {
+            range = sel.getRangeAt(0);
+            range.deleteContents();
+
+            // Range.createContextualFragment() would be useful here but is
+            // non-standard and not supported in all browsers (IE9, for one)
+            const el = document.createElement("div");
+            el.innerHTML = html;
+            let frag = document.createDocumentFragment(),
+              node,
+              lastNode;
+            while ((node = el.firstChild)) {
+              lastNode = frag.appendChild(node);
+            }
+            range.insertNode(frag);
+
+            // Preserve the selection
+            if (lastNode) {
+              range = range.cloneRange();
+              range.setStartAfter(lastNode);
+              range.collapse(true);
+              sel.removeAllRanges();
+              sel.addRange(range);
+            }
+          }
+        } else if (document.selection && document.selection.type != "Control") {
+          // IE < 9
+          document.selection.createRange().pasteHTML(html);
+        }
+      }
+
+      function addToDiv(event) {
+        const emoji = event.target.value;
+        const chatBox = document.getElementById("chatbox");
+        chatBox.focus();
+        pasteHtmlAtCaret(`<b>${emoji}</b>`);
+        console.log(chatBox.innerText);
+      }
+      function generateEmojiIcon(emoji) {
+        const input = document.createElement("input");
+        input.type = "button";
+        input.value = emoji;
+        input.innerText = emoji;
+        input.addEventListener("click", addToDiv);
+        return input;
+      }
+      const emojis = [
+        {
+          emoji: "😂",
+        },
+        {
+          emoji: "❤️",
+        },
+      ];
+      emojis.forEach((emoji) => {
+        document
+          .getElementById("emojis")
+          .appendChild(generateEmojiIcon(emoji.emoji));
+      });
+    </script>
+  </body>
+</html>
